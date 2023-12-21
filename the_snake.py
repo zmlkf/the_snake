@@ -48,6 +48,7 @@ def rand_coord():
 
 class GameObject():
     """Родительский класс"""
+
     def __init__(self, position=CENTER, body_color=GREEN):
         """Создание объекта на основе позиции и цвета"""
         self.position = position
@@ -60,8 +61,10 @@ class GameObject():
 
 class Apple(GameObject):
     """Дочерний класс"""
+
     def __init__(self, position=CENTER, body_color=RED):
         """Созднание превого объекта с наследованием от
+        
         родительского класса"""
         super().__init__(position, body_color)
 
@@ -89,6 +92,7 @@ class Apple(GameObject):
 
 class Snake(GameObject):
     """Создание дочернего класса"""
+
     def __init__(self, position=CENTER, body_color=GREEN):
         """Иницилизация объекта"""
         super().__init__(position, body_color)
@@ -159,6 +163,7 @@ class Snake(GameObject):
 
     def сrash(self):
         """При столкновение со стеной голове присваеватся
+
         объект с противоположно стороны """
         snake_head = self.get_head_position()
         if snake_head[0] < 0:
