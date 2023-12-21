@@ -65,7 +65,8 @@ class Apple(GameObject):
     def __init__(self, position=CENTER, body_color=RED):
         """Созднание превого объекта с наследованием от
         
-        родительского класса"""
+        родительского класса
+        """
         super().__init__(position, body_color)
 
     # Метод draw класса Apple
@@ -164,7 +165,8 @@ class Snake(GameObject):
     def сrash(self):
         """При столкновение со стеной голове присваеватся
 
-        объект с противоположно стороны """
+        объект с противоположно стороны 
+        """
         snake_head = self.get_head_position()
         if snake_head[0] < 0:
             self.positions[0] = ((SCREEN_WIDTH, snake_head[1]))
