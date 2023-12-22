@@ -167,6 +167,10 @@ def handle_keys(game_object):
             pg.quit()
             sys.exit()
         elif event.type == pg.KEYDOWN:
+            # Выход по esq
+            if event.key == pg.K_ESCAPE:
+                pg.quit()
+                sys.exit()
             dct = {
                 (LEFT, pg.K_UP): UP,
                 (RIGHT, pg.K_UP): UP,
@@ -182,6 +186,8 @@ def handle_keys(game_object):
                 game_object.direction
             )
             game_object.update_direction()
+
+            
 
 
 def main():
