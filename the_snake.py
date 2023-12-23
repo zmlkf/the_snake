@@ -2,7 +2,7 @@ from random import choice, randint
 
 import pygame as pg
 
-# Инициализация Pygame
+# Инициализация Pgpg
 pg.init()
 
 # Константы для размеров
@@ -112,7 +112,7 @@ class Snake(GameObject):
 
     # Метод draw класса Snake
     def draw(self, surface=screen):
-        """Отрисовка змеи и затирание хоста"""
+        """Отрисовка змеи"""
         for position in self.positions:
             super().draw(position)
 
@@ -163,10 +163,11 @@ def handle_keys(game_object):
 def main():
     """Функция запуска игры"""
     snake = Snake()
-    # При создание объектов класса Яблока передается аргумент класса Змеи
+    # При создание объектов класса Apple передается аргумент: класс Snake
     # для определения занятых ячеек
     apple = Apple(snake)
     special_apple = Apple(snake, body_color=BLUE)
+    # Таймер для специального яблока
     timer_for_special_apple = 0
 
     while True:
@@ -186,7 +187,7 @@ def main():
             apple.randomize_position()
 
         # Проверка на встречу со специальным ялоком
-        # при котором змейка теряет длину, а при длине 1
+        # при котором змейка теряет длину, а при длине змейки в 1 объект
         # вызывается метод reset()
         if snake.get_head_position() == special_apple.position:
             snake.length -= 1
