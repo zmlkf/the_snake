@@ -62,7 +62,7 @@ class GameObject():
 class Apple(GameObject):
     """Дочерний класс"""
 
-    def __init__(self, snake, position=CENTER, body_color=RED):
+    def __init__(self, position=CENTER, body_color=RED):
         """Созднание превого объекта с наследованием от
         родительского класса
         """
