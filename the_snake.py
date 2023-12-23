@@ -81,6 +81,7 @@ class Apple(GameObject):
             )
             if new_position not in self.snake_positions:
                 self.position = new_position
+                break
 
 
 class Snake(GameObject):
