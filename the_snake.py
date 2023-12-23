@@ -2,7 +2,7 @@ from random import choice, randint
 
 import pygame as pg
 
-# Инициализация Pgpg
+# Инициализация Pygame
 pg.init()
 
 # Константы для размеров
