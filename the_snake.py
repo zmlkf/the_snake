@@ -71,7 +71,7 @@ class GameObject():
         )
 
 
-class Apples(GameObject):
+class Apple(GameObject):
     """Дочерний класс"""
 
     def __init__(self, position=CENTER, body_color=RED):
@@ -176,8 +176,8 @@ def main():
     при увеличении ее тела.
     """
     snake = Snake()
-    apple = Apples(random_coord(snake.position))
-    special_apple = Apples(random_coord(apple.position), body_color=BLUE)
+    apple = Apple(random_coord(snake.position))
+    special_apple = Apple(random_coord(apple.position), body_color=BLUE)
     # Таймер для смены позиций яблок
     timer_for_apples = 0
 
