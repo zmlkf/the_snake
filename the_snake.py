@@ -81,7 +81,6 @@ class Apple(GameObject):
             )
             if new_position not in self.snake_positions:
                 self.position = new_position
-                return self.position
 
 
 class Snake(GameObject):
@@ -230,3 +229,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
