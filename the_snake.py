@@ -18,7 +18,7 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 
 # Цвета фона - черный
-BOARD_BACKGROUND_COLOR = (130, 130, 130)
+BOARD_BACKGROUND_COLOR = (150, 150, 150)
 
 # Скорость движения змейки
 SPEED = 5
@@ -37,6 +37,17 @@ BLUE = (0, 0, 255)
 
 # Центр экрана
 CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+
+# Рандомные координаты для запуска игры
+# не совподающие с координатами других обьектов
+def random_coord(position):
+    while True:
+        new_coord = (
+            randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1)
+        )
+        if new_coord != position:
+            return new_coord
 
 
 class GameObject():
@@ -59,28 +70,25 @@ class GameObject():
         )
 
 
-class Apple(GameObject):
+class Apples(GameObject):
     """Дочерний класс"""
 
     def __init__(self, position=CENTER, body_color=RED):
         """Созднание превого объекта с наследованием от
         родительского класса
         """
-        # Получение занятых ячеек змеи
-        self.snake_positions = snake.positions
-        self.randomize_position()
-        self.body_color = body_color
+        super().__init__(position, body_color)
 
-    def randomize_position(self):
+    def randomize_position(self, snake_positions, *apple_positions):
         """Получение новой рандомной позиции для яблока
         которая не совпадает с ячейками змеи
         """
         while True:
-            new_position = (
+            new_pos = (
                 randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1)
             )
-            if new_position not in self.snake_positions:
-                self.position = new_position
+            if new_pos not in snake_positions + list(apple_positions):
+                self.position = new_pos
                 break
 
 
@@ -123,7 +131,7 @@ class Snake(GameObject):
     def reset(self):
         """Сброс змейки до начального состояния"""
         self.length = 1
-        self.positions = [self.position]
+        self.positions = [CENTER]
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
         self.next_direction = None  # Атрибут необходимый по условию задачи
         self.last = None
@@ -161,14 +169,16 @@ def handle_keys(game_object):
 
 
 def main():
-    """Функция запуска игры"""
+    """Функция запуска игры
+    в которой красные яблоки - увеличивают змейку,
+    а синие - уменьшают. А так же ускорение змейки
+    при увеличении ее тела.
+    """
     snake = Snake()
-    # При создание объектов класса Apple передается аргумент: класс Snake
-    # для определения занятых ячеек
-    apple = Apple(snake)
-    special_apple = Apple(snake, body_color=BLUE)
-    # Таймер для специального яблока
-    timer_for_special_apple = 0
+    apple = Apples(random_coord(snake.position))
+    special_apple = Apples(random_coord(apple.position), body_color=BLUE)
+    # Таймер для смены позиций яблок
+    timer_for_apples = 0
 
     while True:
         # Нажатие клавиш
@@ -184,7 +194,7 @@ def main():
             # Ускорение при достижении кол-ва объектов змеи кратного 3
             if not snake.length % 3:
                 snake.speed += 1
-            apple.randomize_position()
+            apple.randomize_position(snake.positions, special_apple.position)
 
         # Проверка на встречу со специальным ялоком
         # при котором змейка теряет длину, а при длине змейки в 1 объект
@@ -195,20 +205,25 @@ def main():
                 if not snake.length % 3:
                     snake.speed -= 1
                 snake.positions.pop()
-                special_apple.randomize_position()
+                special_apple.randomize_position(
+                    snake.positions, apple.position
+                )
             else:
                 snake.reset()
-                special_apple.randomize_position()
+                special_apple.randomize_position(
+                    snake.positions, apple.position
+                )
 
         # Проверка на столкновение с собой
         snake.crash_with_yourself()
 
         # Увеличения таймера с каждой итерацией
-        timer_for_special_apple += 1
-        # Каждый 100 шагов специальная еда меняет местонахождение
-        if timer_for_special_apple >= 100:
-            timer_for_special_apple = 0
-            special_apple.randomize_position()
+        timer_for_apples += 1
+        # Каждый 100 шагов еда меняет местонахождение
+        if timer_for_apples >= 100:
+            timer_for_apples = 0
+            special_apple.randomize_position(snake.positions, apple.position)
+            apple.randomize_position(snake.positions, special_apple.position)
 
         # Отрисовка
         screen.fill(BOARD_BACKGROUND_COLOR)
@@ -221,7 +236,7 @@ def main():
 
         # Заголовок окна игрового поля
         pg.display.set_caption(
-            f'Змейка |  Скорость: {SPEED}  |  '
+            f'Змейка |  Скорость: {snake.speed}  |  '
             f'Длина: {snake.length}  |  esq - для выхода '
         )
 
