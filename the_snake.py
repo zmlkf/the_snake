@@ -42,7 +42,7 @@ CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 def random_coord(position):
     """Рандомные координаты для запуска игры
     не совподающие с координатами других обьектов
-    """       
+    """
     while True:
         new_coord = (
             randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1)
