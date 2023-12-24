@@ -107,13 +107,14 @@ class Apple(GameObject):
 class Snake(GameObject):
     """Дочерний класс"""
 
-    # Присутствие этого атрибута - условие задачи,
-    # хотя ему и нет достойного применения
+    # Присутствие этого атрибута - условие задачи
     next_direction = None
 
-    def __init__(self, body_color):
+    # Присутствие кода position=CENTER необходимо для прохождения
+    # автоматических тестов
+    def __init__(self, position=CENTER, body_color=GREEN):
         """Иницилизация объекта"""
-        super().__init__(body_color=body_color)
+        super().__init__(position, body_color=body_color)
         self.reset()
 
     def update_direction(self):
