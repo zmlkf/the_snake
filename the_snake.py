@@ -106,7 +106,7 @@ class Apple(GameObject):
 
 class Snake(GameObject):
     """Дочерний класс"""
-    
+
     # Присутствие этого атрибута - условие задачи,
     # хотя ему и нет достойного применения
     next_direction = None
