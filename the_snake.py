@@ -101,9 +101,9 @@ class Apple(GameObject):
     присваюващий новую рандомную позицию яблоку.
     """
 
-    def draw(self, surface, cell_color):
+    def draw(self, surface, body_color):
         """Метод для отрисовки яблок"""
-        self.draw_a_cell(self.position, surface, cell_color)
+        self.draw_a_cell(self.position, surface, body_color)
 
     def randomize_position(self, occupied):
         """Вызов функции для получения рандомной позиции"""
