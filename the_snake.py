@@ -52,7 +52,7 @@ TURNS = {
 def random_coord(occupied):
     """Рандомные координаты не совподающие с координатами
     переданными в арументах.
-    """     
+    """
     while True:
         pos = (randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1))
         if pos not in occupied:
@@ -76,8 +76,7 @@ class GameObject():
         pass
 
     def draw_a_cell(
-            self, position, surface, cell_color=BOARD_BACKGROUND_COLOR
-    ):
+            self, position, surface, cell_color=None):
         """Отрисовка ячейки объекта на основе местоположения и затирание
         объекта old_position
         """
@@ -87,8 +86,8 @@ class GameObject():
                 (GRID_SIZE, GRID_SIZE)
             )
         )
-        if cell_color == BOARD_BACKGROUND_COLOR:
-            pg.draw.rect(surface, cell_color, rect)
+        if not cell_color:
+            pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, rect)
         else:
             pg.draw.rect(surface, cell_color, rect)
             pg.draw.rect(surface, BORDER_CELL_COLOR, rect, 1)
@@ -101,9 +100,9 @@ class Apple(GameObject):
     присваюващий новую рандомную позицию яблоку.
     """
 
-    def draw(self, surface, body_color):
+    def draw(self, surface):
         """Метод для отрисовки яблок"""
-        self.draw_a_cell(self.position, surface, body_color)
+        self.draw_a_cell(self.position, surface, self.body_color)
 
     def randomize_position(self, occupied):
         """Вызов функции для получения рандомной позиции"""
@@ -139,9 +138,9 @@ class Snake(GameObject):
         if self.length < len(self.positions):
             self.last = self.positions.pop()
 
-    def draw(self, surface, body_color):
+    def draw(self, surface):
         """Вызов базового метода для отрисовки ячейки и затирания хвоста"""
-        self.draw_a_cell(self.get_head_position(), surface, body_color)
+        self.draw_a_cell(self.get_head_position(), surface, self.body_color)
         self.draw_a_cell(self.last, surface)
 
     def get_head_position(self):
@@ -153,7 +152,7 @@ class Snake(GameObject):
         self.length = 1
         self.positions = [CENTER]
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
-        self.last = None
+        self.last = self.positions[-1]
 
 
 def handle_keys(game_object):
@@ -189,8 +188,8 @@ def main():
     по мере увеличения ее тела.
     """
     snake = Snake()
-    apple = Apple(random_coord(snake.positions))
-    bad_apple = Apple(random_coord((*snake.positions, apple.position)))
+    apple = Apple(random_coord(snake.positions), RED)
+    bad_apple = Apple(random_coord((*snake.positions, apple.position)), BLUE)
     # Таймер для смены позиций яблок
     timer_for_apples = 0
     screen.fill(BOARD_BACKGROUND_COLOR)
@@ -250,9 +249,9 @@ def main():
             )
 
         # Отрисовка
-        snake.draw(screen, GREEN)
-        apple.draw(screen, RED)
-        bad_apple.draw(screen, BLUE)
+        snake.draw(screen)
+        apple.draw(screen)
+        bad_apple.draw(screen)
 
         # Обновление экрана
         pg.display.flip()
