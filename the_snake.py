@@ -54,9 +54,7 @@ def random_coord(occupied):
     переданными в арументах.
     """
     while True:
-        pos = (
-            randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1)
-        )
+        pos = (randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1))
         if pos not in occupied:
             return pos
 
@@ -77,7 +75,9 @@ class GameObject():
         """
         pass
 
-    def draw_a_cell(self, position, old_position, surface, body_color):
+    def draw_a_cell(
+            self, position, surface, cell_color=BOARD_BACKGROUND_COLOR
+    ):
         """Отрисовка ячейки объекта на основе местоположения и затирание
         объекта old_position
         """
@@ -87,15 +87,11 @@ class GameObject():
                 (GRID_SIZE, GRID_SIZE)
             )
         )
-        pg.draw.rect(surface, body_color, rect)
-        pg.draw.rect(surface, BORDER_CELL_COLOR, rect, 1)
-        # Затирание прошлого местоположения
-        if old_position:
-            last_rect = pg.Rect(
-                (old_position[0] * GRID_SIZE, old_position[1] * GRID_SIZE),
-                (GRID_SIZE, GRID_SIZE)
-            )
-            pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
+        if cell_color == BOARD_BACKGROUND_COLOR:
+            pg.draw.rect(surface, cell_color, rect)
+        else:
+            pg.draw.rect(surface, cell_color, rect)
+            pg.draw.rect(surface, BORDER_CELL_COLOR, rect, 1)
 
 
 class Apple(GameObject):
@@ -105,9 +101,9 @@ class Apple(GameObject):
     присваюващий новую рандомную позицию яблоку.
     """
 
-    def draw(self, old_position, surface):
+    def draw(self, surface, cell_color):
         """Метод для отрисовки яблок"""
-        self.draw_a_cell(self.position, old_position, surface, self.body_color)
+        self.draw_a_cell(self.position, surface, cell_color)
 
     def randomize_position(self, occupied):
         """Вызов функции для получения рандомной позиции"""
@@ -143,11 +139,10 @@ class Snake(GameObject):
         if self.length < len(self.positions):
             self.last = self.positions.pop()
 
-    def draw(self, surface):
+    def draw(self, surface, body_color):
         """Вызов базового метода для отрисовки ячейки и затирания хвоста"""
-        self.draw_a_cell(
-            self.get_head_position(), self.last, surface, self.body_color
-        )
+        self.draw_a_cell(self.get_head_position(), surface, body_color)
+        self.draw_a_cell(self.last, surface)
 
     def get_head_position(self):
         """Получение координатов головы змейки"""
@@ -193,11 +188,9 @@ def main():
     а синие - уменьшают. А так же ускорение змейки
     по мере увеличения ее тела.
     """
-    snake = Snake(GREEN)
-    apple = Apple(random_coord(snake.positions), RED)
-    bad_apple = Apple(
-        random_coord((*snake.positions, apple.position)), BLUE
-    )
+    snake = Snake()
+    apple = Apple(random_coord(snake.positions))
+    bad_apple = Apple(random_coord((*snake.positions, apple.position)))
     # Таймер для смены позиций яблок
     timer_for_apples = 0
     screen.fill(BOARD_BACKGROUND_COLOR)
@@ -236,7 +229,7 @@ def main():
                 if not snake.length % 3:
                     speed -= 1
                 snake.length -= 1
-                bad_apple.draw(snake.positions.pop(), screen)
+                snake.draw_a_cell(snake.positions.pop(), screen)
                 bad_apple.randomize_position(
                     (*snake.positions, apple.position)
                 )
@@ -247,8 +240,8 @@ def main():
         # Каждый 100 шагов еда меняет местонахождение
         if timer_for_apples >= 100:
             timer_for_apples = 0
-            apple.draw(apple.position, screen)
-            bad_apple.draw(bad_apple.position, screen)
+            apple.draw_a_cell(apple.position, screen)
+            bad_apple.draw_a_cell(bad_apple.position, screen)
             bad_apple.randomize_position(
                 (*snake.positions, apple.position)
             )
@@ -257,9 +250,9 @@ def main():
             )
 
         # Отрисовка
-        snake.draw(screen)
-        apple.draw(None, screen)
-        bad_apple.draw(None, screen)
+        snake.draw(screen, GREEN)
+        apple.draw(screen, RED)
+        bad_apple.draw(screen, BLUE)
 
         # Обновление экрана
         pg.display.flip()
