@@ -52,7 +52,7 @@ TURNS = {
 def random_coord(occupied):
     """Рандомные координаты не совподающие с координатами
     переданными в арументах.
-    """
+    """     
     while True:
         pos = (randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1))
         if pos not in occupied:
