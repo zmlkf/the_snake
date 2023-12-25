@@ -20,6 +20,9 @@ RIGHT = (1, 0)
 # Цвета фона - черный
 BOARD_BACKGROUND_COLOR = (150, 150, 150)
 
+# Цвет границы ячейки
+BORDER_CELL_COLOR = (93, 216, 228)
+
 # Скорость движения змейки
 SPEED = 5
 
@@ -46,17 +49,16 @@ TURNS = {
 }
 
 
-def random_coord(occupied_positions):
+def random_coord(occupied):
     """Рандомные координаты не совподающие с координатами
     переданными в арументах.
     """
     while True:
-        new_coord = (
+        pos = (
             randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1)
         )
-        if new_coord not in occupied_positions:
-            print(occupied_positions)
-            return new_coord
+        if pos not in occupied:
+            return pos
 
 
 class GameObject():
@@ -75,22 +77,22 @@ class GameObject():
         """
         pass
 
-    def draw_a_cell(self, surface):
-        """Отрисовка ячейки объекта на основе местоположения"""
+    def draw_a_cell(self, position, old_position, surface, body_color):
+        """Отрисовка ячейки объекта на основе местоположения и затирание
+        объекта old_position
+        """
         rect = (
             pg.Rect(
-                (self.position[0] * GRID_SIZE, self.position[1] * GRID_SIZE),
+                (position[0] * GRID_SIZE, position[1] * GRID_SIZE),
                 (GRID_SIZE, GRID_SIZE)
             )
         )
-        pg.draw.rect(surface, self.body_color, rect)
-        pg.draw.rect(surface, (93, 216, 228), rect, 1)
-
-    def erase_a_cell(self, surface, position):
-        """Затирание прошлого местоположения"""
-        if position:
+        pg.draw.rect(surface, body_color, rect)
+        pg.draw.rect(surface, BORDER_CELL_COLOR, rect, 1)
+        # Затирание прошлого местоположения
+        if old_position:
             last_rect = pg.Rect(
-                (position[0] * GRID_SIZE, position[1] * GRID_SIZE),
+                (old_position[0] * GRID_SIZE, old_position[1] * GRID_SIZE),
                 (GRID_SIZE, GRID_SIZE)
             )
             pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
@@ -103,13 +105,13 @@ class Apple(GameObject):
     присваюващий новую рандомную позицию яблоку.
     """
 
-    def draw(self, surface):
+    def draw(self, old_position, surface):
         """Метод для отрисовки яблок"""
-        self.draw_a_cell(surface)
+        self.draw_a_cell(self.position, old_position, surface, self.body_color)
 
-    def randomize_position(self, occupied_positions):
+    def randomize_position(self, occupied):
         """Вызов функции для получения рандомной позиции"""
-        self.position = random_coord(occupied_positions)
+        self.position = random_coord(occupied)
 
 
 class Snake(GameObject):
@@ -131,26 +133,21 @@ class Snake(GameObject):
         self.direction = new_direction
 
     def move(self):
-        """Проверка на столкновение с собой и дальнейшее движение
-        с применением тороидальной геометрии
-        """
+        """Движение с применением тороидальной геометрии"""
         head = self.get_head_position()
-        if head in self.positions[4:]:
-            self.reset()
-            screen.fill(BOARD_BACKGROUND_COLOR)
         new_head = (
             (head[0] + self.direction[0]) % GRID_WIDTH,
             (head[1] + self.direction[1]) % GRID_HEIGHT
         )
         self.positions.insert(0, new_head)
-        self.position = self.get_head_position()
         if self.length < len(self.positions):
             self.last = self.positions.pop()
 
     def draw(self, surface):
         """Вызов базового метода для отрисовки ячейки и затирания хвоста"""
-        self.draw_a_cell(surface)
-        self.erase_a_cell(surface, self.last)
+        self.draw_a_cell(
+            self.get_head_position(), self.last, surface, self.body_color
+        )
 
     def get_head_position(self):
         """Получение координатов головы змейки"""
@@ -183,25 +180,29 @@ def handle_keys(game_object):
             )
 
 
+def set_caption(speed, length):
+    """Заголовок окна игрового поля"""
+    pg.display.set_caption(
+        f'Змейка |  Скорость: {speed}  |  '
+        f'Длина: {length}  |  esc - для выхода '
+    )
+
+
 def main():
     """Функция запуска игры в которой красные яблоки - увеличивают змейку,
     а синие - уменьшают. А так же ускорение змейки
     по мере увеличения ее тела.
     """
-    snake = Snake(body_color=GREEN)
-    apple = Apple(random_coord(snake.positions), body_color=RED)
+    snake = Snake(GREEN)
+    apple = Apple(random_coord(snake.positions), RED)
     bad_apple = Apple(
-        random_coord((*snake.positions, apple.position)), body_color=BLUE
+        random_coord((*snake.positions, apple.position)), BLUE
     )
     # Таймер для смены позиций яблок
     timer_for_apples = 0
     screen.fill(BOARD_BACKGROUND_COLOR)
     speed = SPEED
-    # Заголовок окна игрового поля
-    pg.display.set_caption(
-        f'Змейка |  Скорость: {speed}  |  '
-        f'Длина: {snake.length}  |  esc - для выхода '
-    )
+    set_caption(speed, snake.length)
 
     while True:
         # Нажатие клавиш
@@ -209,6 +210,10 @@ def main():
 
         # Движение змеи
         snake.move()
+        # Проверка на столкновение с собой
+        if snake.get_head_position() in snake.positions[4:]:
+            snake.reset()
+            screen.fill(BOARD_BACKGROUND_COLOR)
 
         # Проверка на встречу с яблоком
         if snake.get_head_position() == apple.position:
@@ -219,12 +224,7 @@ def main():
             apple.randomize_position(
                 (*snake.positions, bad_apple.position)
             )
-            # Смена заголовка окна игрового поля
-            pg.display.set_caption(
-                f'Змейка |  Скорость: {speed}  |  '
-                f'Длина: {snake.length}  |  esc - для выхода '
-            )
-
+            set_caption(speed, snake.length)
         # Проверка на встречу с плохим ялоком при котором змейка теряет длину,
         # а при длине змейки в 1 объект плохое яблоко просто меняет позицию
         if snake.get_head_position() == bad_apple.position:
@@ -236,23 +236,19 @@ def main():
                 if not snake.length % 3:
                     speed -= 1
                 snake.length -= 1
-                snake.erase_a_cell(screen, snake.positions.pop())
+                bad_apple.draw(snake.positions.pop(), screen)
                 bad_apple.randomize_position(
                     (*snake.positions, apple.position)
                 )
-                # Смена заголовка окна игрового поля
-                pg.display.set_caption(
-                    f'Змейка |  Скорость: {speed}  |  '
-                    f'Длина: {snake.length}  |  esc - для выхода '
-                )
+                set_caption(speed, snake.length)
 
         # Увеличения таймера с каждой итерацией
         timer_for_apples += 1
         # Каждый 100 шагов еда меняет местонахождение
         if timer_for_apples >= 100:
             timer_for_apples = 0
-            apple.erase_a_cell(screen, apple.position)
-            bad_apple.erase_a_cell(screen, bad_apple.position)
+            apple.draw(apple.position, screen)
+            bad_apple.draw(bad_apple.position, screen)
             bad_apple.randomize_position(
                 (*snake.positions, apple.position)
             )
@@ -262,8 +258,8 @@ def main():
 
         # Отрисовка
         snake.draw(screen)
-        apple.draw(screen)
-        bad_apple.draw(screen)
+        apple.draw(None, screen)
+        bad_apple.draw(None, screen)
 
         # Обновление экрана
         pg.display.flip()
