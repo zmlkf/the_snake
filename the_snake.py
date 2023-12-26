@@ -87,10 +87,9 @@ class GameObject():
             )
         )
         if not cell_color:
-            pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, rect)
-        else:
-            pg.draw.rect(surface, cell_color, rect)
-            pg.draw.rect(surface, BORDER_CELL_COLOR, rect, 1)
+            cell_color = self.body_color
+        pg.draw.rect(surface, cell_color, rect)
+        pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, rect, 1)
 
 
 class Apple(GameObject):
@@ -102,7 +101,7 @@ class Apple(GameObject):
 
     def draw(self, surface):
         """Метод для отрисовки яблок"""
-        self.draw_a_cell(self.position, surface, self.body_color)
+        self.draw_a_cell(self.position, surface)
 
     def randomize_position(self, occupied):
         """Вызов функции для получения рандомной позиции"""
@@ -118,9 +117,9 @@ class Snake(GameObject):
     и сброс змейки до начального состояния.
     """
 
-    def __init__(self, body_color=GREEN):
+    def __init__(self):
         """Иницилизация объекта"""
-        super().__init__(body_color=body_color)
+        super().__init__()
         self.reset()
 
     def update_direction(self, new_direction):
@@ -140,8 +139,8 @@ class Snake(GameObject):
 
     def draw(self, surface):
         """Вызов базового метода для отрисовки ячейки и затирания хвоста"""
-        self.draw_a_cell(self.get_head_position(), surface, self.body_color)
-        self.draw_a_cell(self.last, surface)
+        self.draw_a_cell(self.get_head_position(), surface)
+        self.draw_a_cell(self.last, surface, BOARD_BACKGROUND_COLOR)
 
     def get_head_position(self):
         """Получение координатов головы змейки"""
@@ -228,7 +227,9 @@ def main():
                 if not snake.length % 3:
                     speed -= 1
                 snake.length -= 1
-                snake.draw_a_cell(snake.positions.pop(), screen)
+                snake.draw_a_cell(
+                    snake.positions.pop(), screen, BOARD_BACKGROUND_COLOR
+                )
                 bad_apple.randomize_position(
                     (*snake.positions, apple.position)
                 )
@@ -239,8 +240,10 @@ def main():
         # Каждый 100 шагов еда меняет местонахождение
         if timer_for_apples >= 100:
             timer_for_apples = 0
-            apple.draw_a_cell(apple.position, screen)
-            bad_apple.draw_a_cell(bad_apple.position, screen)
+            apple.draw_a_cell(apple.position, screen, BOARD_BACKGROUND_COLOR)
+            bad_apple.draw_a_cell(
+                bad_apple.position, screen, BOARD_BACKGROUND_COLOR
+            )
             bad_apple.randomize_position(
                 (*snake.positions, apple.position)
             )
