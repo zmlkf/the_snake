@@ -1,5 +1,6 @@
 from random import choice, randint
 from sys import exit
+
 import pygame as pg
 
 # Инициализация Pygame
@@ -207,7 +208,7 @@ def main():
             screen.fill(BOARD_BACKGROUND_COLOR)
 
         # Проверка на встречу с яблоком
-        if snake.get_head_position() == apple.position:
+        elif snake.get_head_position() == apple.position:
             snake.length += 1
             # Ускорение при достижении кол-ва объектов змеи кратного 3
             if not snake.length % 3:
@@ -218,7 +219,7 @@ def main():
             set_caption(speed, snake.length)
         # Проверка на встречу с плохим ялоком при котором змейка теряет длину,
         # а при длине змейки в 1 объект плохое яблоко просто меняет позицию
-        if snake.get_head_position() == bad_apple.position:
+        elif snake.get_head_position() == bad_apple.position:
             if snake.length == 1:
                 bad_apple.randomize_position(
                     (*snake.positions, apple.position)
