@@ -54,7 +54,7 @@ Welcome to the classic Snake game implemented in Python using Pygame. Guide the 
 
 ## Code Structure
 
-- **`snake.py`**: The main game file containing all the logic and game loop.
+- **`the_snake.py`**: The main game file containing all the logic and game loop.
 - **`README.md`**: This readme file.
 
 ### Key Classes and Functions
