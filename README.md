@@ -24,7 +24,7 @@ Welcome to the classic Snake game implemented in Python using Pygame. Guide the 
 1. **Clone the repository:**
     ```sh
     git clone git@github.com:zmlkf/the_snake.git
-    cd snake-game
+    cd the_snake
     ```
 
 2. **Create a virtual environment (optional but recommended):**
