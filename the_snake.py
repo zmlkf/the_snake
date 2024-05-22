@@ -1,91 +1,109 @@
-from random import choice, randint
+from random import choice
 from sys import exit
 
 import pygame as pg
 
-# Инициализация Pygame
+# Initialize Pygame
 pg.init()
 
-# Константы для размеров
+# Constants for screen dimensions
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 
-# Направления движения
+# Movement directions
 UP = (0, -1)
 DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
-# Цвета фона - черный
+# Colors
 BOARD_BACKGROUND_COLOR = (150, 150, 150)
-
-# Цвет границы ячейки
 BORDER_CELL_COLOR = (93, 216, 228)
-
-# Скорость движения змейки
-SPEED = 5
-
-# Настройка игрового окна
-screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
-
-# Настройка времени
-clock = pg.time.Clock()
-
-# Цвета элементов
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 
-# Центр экрана
+# Initial game speed
+INITIAL_SPEED = 5
+SPEED_INCREMENT = 1
+TIMER_RESET_THRESHOLD = 100
+
+# Set up game window
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+
+# Set up clock
+clock = pg.time.Clock()
+
+# Center of the screen
 CENTER = (GRID_WIDTH // 2, GRID_HEIGHT // 2)
 
-# Словарь для определения направления змейки
-TURNS = {
-    (LEFT, pg.K_UP): UP, (RIGHT, pg.K_UP): UP,
-    (UP, pg.K_LEFT): LEFT, (DOWN, pg.K_LEFT): LEFT,
-    (UP, pg.K_RIGHT): RIGHT, (DOWN, pg.K_RIGHT): RIGHT,
-    (LEFT, pg.K_DOWN): DOWN, (RIGHT, pg.K_DOWN): DOWN,
+# Dictionary for determining snake's direction
+DIRECTION_MAP = {
+    pg.K_UP: UP,
+    pg.K_DOWN: DOWN,
+    pg.K_LEFT: LEFT,
+    pg.K_RIGHT: RIGHT,
 }
 
 
-def random_coord(occupied):
-    """Рандомные координаты не совподающие с координатами
-    переданными в арументах.
+def random_coord(occupied: set) -> tuple:
     """
-    while True:
-        pos = (randint(0, GRID_WIDTH - 1), randint(0, GRID_HEIGHT - 1))
-        if pos not in occupied:
-            return pos
+    Generate a random coordinate that is not in the occupied positions.
 
+    Args:
+        occupied (set): Set of occupied coordinates.
 
-class GameObject():
-    """Базовый класс, иницилизирующий цвет и позицию объекта игры,
-    содержащий методы для отрисовки и затирания этих объектов.
+    Returns:
+        tuple: Random coordinate (x, y).
     """
+    possible_positions = [
+        (x, y)
+        for x in range(GRID_WIDTH)
+        for y in range(GRID_HEIGHT)
+        if (x, y) not in occupied
+    ]
+    return choice(possible_positions)
 
-    def __init__(self, position=CENTER, body_color=GREEN):
-        """Создание объекта на основе позиции и цвета"""
+
+class GameObject:
+    """A base class for game objects."""
+
+    def __init__(self, position: tuple = CENTER, body_color: tuple = GREEN):
+        """
+        Initialize the game object with a position and body color.
+
+        Args:
+            position (tuple): Initial position of the object.
+            body_color (tuple): Color of the object.
+        """
         self.position = position
         self.body_color = body_color
 
-    def draw(self, surface):
-        """Абстрактный метод, который предназначен для переопределения
-        в дочерних классах
+    def draw(self, surface: pg.Surface):
+        """
+        Draw the game object on the surface.
+
+        Args:
+            surface (pg.Surface): Surface to draw on.
         """
         pass
 
-    def draw_a_cell(
-            self, position, surface, cell_color=None):
-        """Отрисовка ячейки объекта на основе местоположения и затирание
-        объекта old_position
+    def draw_a_cell(self, position: tuple,
+                    surface: pg.Surface,
+                    cell_color: tuple = None):
         """
-        rect = (
-            pg.Rect(
-                (position[0] * GRID_SIZE, position[1] * GRID_SIZE),
-                (GRID_SIZE, GRID_SIZE)
-            )
+        Draw a single cell of the game object.
+
+        Args:
+            position (tuple): Position of the cell to draw.
+            surface (pg.Surface): Surface to draw on.
+            cell_color (tuple, optional): Color of the cell.
+        """
+        rect = pg.Rect(
+            (position[0] * GRID_SIZE, position[1] * GRID_SIZE),
+            (GRID_SIZE, GRID_SIZE)
         )
         if not cell_color:
             cell_color = self.body_color
@@ -94,41 +112,46 @@ class GameObject():
 
 
 class Apple(GameObject):
-    """Класс, содеражащий съедобные и несъедобные яблоки для змейки.
+    """A class representing an apple."""
 
-    Класс содержит переопределенный метод draw и метод
-    присваюващий новую рандомную позицию яблоку.
-    """
+    def draw(self, surface: pg.Surface):
+        """
+        Draw the apple on the surface.
 
-    def draw(self, surface):
-        """Метод для отрисовки яблок"""
+        Args:
+            surface (pg.Surface): Surface to draw on.
+        """
         self.draw_a_cell(self.position, surface)
 
-    def randomize_position(self, occupied):
-        """Вызов функции для получения рандомной позиции"""
+    def randomize_position(self, occupied: set):
+        """
+        Randomize the position of the apple, avoiding occupied positions.
+
+        Args:
+            occupied (set): Set of occupied coordinates.
+        """
         self.position = random_coord(occupied)
 
 
 class Snake(GameObject):
-    """Класс змейки содержащий дополнительные артибуты относительно
-    базового класса.
-
-    Содержит методы для обновления местоположения, движения,
-    переопределленого метода draw, метода для получения головы змейки
-    и сброс змейки до начального состояния.
-    """
+    """A class representing the snake."""
 
     def __init__(self):
-        """Иницилизация объекта"""
+        """Initialize the snake."""
         super().__init__()
         self.reset()
 
-    def update_direction(self, new_direction):
-        """Смена направления"""
+    def update_direction(self, new_direction: tuple):
+        """
+        Update the direction of the snake.
+
+        Args:
+            new_direction (tuple): New direction for the snake.
+        """
         self.direction = new_direction
 
     def move(self):
-        """Движение с применением тороидальной геометрии"""
+        """Move the snake in the current direction."""
         head = self.get_head_position()
         new_head = (
             (head[0] + self.direction[0]) % GRID_WIDTH,
@@ -138,129 +161,139 @@ class Snake(GameObject):
         if self.length < len(self.positions):
             self.last = self.positions.pop()
 
-    def draw(self, surface):
-        """Вызов базового метода для отрисовки ячейки и затирания хвоста"""
+    def draw(self, surface: pg.Surface):
+        """
+        Draw the snake on the surface.
+
+        Args:
+            surface (pg.Surface): Surface to draw on.
+        """
         self.draw_a_cell(self.get_head_position(), surface)
         self.draw_a_cell(self.last, surface, BOARD_BACKGROUND_COLOR)
 
-    def get_head_position(self):
-        """Получение координатов головы змейки"""
+    def get_head_position(self) -> tuple:
+        """
+        Get the current position of the snake's head.
+
+        Returns:
+            tuple: Position of the snake's head.
+        """
         return self.positions[0]
 
     def reset(self):
-        """Сброс змейки до начального состояния"""
+        """Reset the snake to the initial state."""
         self.length = 1
         self.positions = [CENTER]
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
         self.last = self.positions[-1]
 
 
-def handle_keys(game_object):
-    """Функция обработки действий пользователя"""
+def handle_keys(snake: Snake):
+    """
+    Handle keyboard inputs to control the snake.
+
+    Args:
+        snake (Snake): The snake object to control.
+    """
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
             exit()
         if event.type == pg.KEYDOWN:
-            # Выход по esc
+            # Exit on esc key
             if event.key == pg.K_ESCAPE:
                 pg.quit()
                 exit()
-            # Обновление направления
-            game_object.update_direction(
-                TURNS.get(
-                    (game_object.direction, event.key), game_object.direction
-                )
-            )
+            # Update direction
+            if event.key in DIRECTION_MAP:
+                new_direction = DIRECTION_MAP[event.key]
+                if (new_direction[0] != -snake.direction[0]
+                        and new_direction[1] != -snake.direction[1]):
+                    snake.update_direction(new_direction)
 
 
-def set_caption(speed, length):
-    """Заголовок окна игрового поля"""
+def set_caption(speed: int, length: int):
+    """
+    Set the window caption with current speed and snake length.
+
+    Args:
+        speed (int): Current speed of the game.
+        length (int): Current length of the snake.
+    """
     pg.display.set_caption(
-        f'Змейка |  Скорость: {speed}  |  '
-        f'Длина: {length}  |  esc - для выхода '
+        f'Snake | Speed: {speed} | Length: {length} | esc - to exit'
     )
 
 
 def main():
-    """Функция запуска игры в которой красные яблоки - увеличивают змейку,
-    а синие - уменьшают. А так же ускорение змейки
-    по мере увеличения ее тела.
-    """
+    """The main game loop."""
     snake = Snake()
-    apple = Apple(random_coord(snake.positions), RED)
-    bad_apple = Apple(random_coord((*snake.positions, apple.position)), BLUE)
-    # Таймер для смены позиций яблок
+    apple = Apple(random_coord(set(snake.positions)), RED)
+    bad_apple = Apple(random_coord(
+        set((*snake.positions, apple.position))), BLUE)
+    # Timer for changing apple positions
     timer_for_apples = 0
     screen.fill(BOARD_BACKGROUND_COLOR)
-    speed = SPEED
+    speed = INITIAL_SPEED
     set_caption(speed, snake.length)
 
     while True:
-        # Нажатие клавиш
+        # Handle key presses
         handle_keys(snake)
 
-        # Движение змеи
+        # Move the snake
         snake.move()
-        # Проверка на столкновение с собой
+        # Check for collision with itself
         if snake.get_head_position() in snake.positions[4:]:
             snake.reset()
             screen.fill(BOARD_BACKGROUND_COLOR)
 
-        # Проверка на встречу с яблоком
+        # Check for collision with apple
         elif snake.get_head_position() == apple.position:
             snake.length += 1
-            # Ускорение при достижении кол-ва объектов змеи кратного 3
+            # Speed up when the snake length is a multiple of 3
             if not snake.length % 3:
-                speed += 1
+                speed += SPEED_INCREMENT
             apple.randomize_position(
-                (*snake.positions, bad_apple.position)
-            )
+                set((*snake.positions, bad_apple.position)))
             set_caption(speed, snake.length)
-        # Проверка на встречу с плохим ялоком при котором змейка теряет длину,
-        # а при длине змейки в 1 объект плохое яблоко просто меняет позицию
+        # Check for collision with bad apple
         elif snake.get_head_position() == bad_apple.position:
             if snake.length == 1:
                 bad_apple.randomize_position(
-                    (*snake.positions, apple.position)
-                )
+                    set((*snake.positions, apple.position)))
             else:
                 if not snake.length % 3:
-                    speed -= 1
+                    speed -= SPEED_INCREMENT
                 snake.length -= 1
                 snake.draw_a_cell(
-                    snake.positions.pop(), screen, BOARD_BACKGROUND_COLOR
-                )
+                    snake.positions.pop(), screen, BOARD_BACKGROUND_COLOR)
                 bad_apple.randomize_position(
-                    (*snake.positions, apple.position)
-                )
+                    set((*snake.positions, apple.position)))
                 set_caption(speed, snake.length)
 
-        # Увеличения таймера с каждой итерацией
+        # Increment the timer with each iteration
         timer_for_apples += 1
-        # Каждый 100 шагов еда меняет местонахождение
-        if timer_for_apples >= 100:
+        # Every TIMER_RESET_THRESHOLD steps, the food changes position
+        if timer_for_apples >= TIMER_RESET_THRESHOLD:
             timer_for_apples = 0
             apple.draw_a_cell(apple.position, screen, BOARD_BACKGROUND_COLOR)
-            bad_apple.draw_a_cell(
-                bad_apple.position, screen, BOARD_BACKGROUND_COLOR
-            )
+            bad_apple.draw_a_cell(bad_apple.position,
+                                  screen, BOARD_BACKGROUND_COLOR)
             bad_apple.randomize_position(
-                (*snake.positions, apple.position)
-            )
+                set((*snake.positions, apple.position)))
             apple.randomize_position(
-                (*snake.positions, bad_apple.position)
-            )
+                set((*snake.positions, bad_apple.position)))
 
-        # Отрисовка
+        # Drawing
         snake.draw(screen)
         apple.draw(screen)
         bad_apple.draw(screen)
 
-        # Обновление экрана
+        # Update the display
         pg.display.flip()
 
-        # Ограничение скорости
+        # Limit the speed
         clock.tick(speed)
 
 
